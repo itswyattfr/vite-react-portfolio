@@ -8,11 +8,10 @@ const Home = () => {
       <section className="flex flex-col items-center justify-center flex-1">
         <div className="text-center space-y-6">
           <h1 className="text-5xl font-light text-white tracking-tight">
-            John Doe
+            Wyatt Gowing
           </h1>
           <p className="text-base text-gray-400 tracking-wide max-w-2xl mx-auto">
-            Full Stack Developer crafting digital experiences with a focus on
-            minimalist design and exceptional functionality.
+            Full Stack Developer.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
             <a

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { ExternalLink, Github, Clock } from "lucide-react";
-import { Octokit } from "octokit";
 
 interface Project {
   title: string;
@@ -23,10 +22,6 @@ interface GitHubRepo {
   default_branch: string;
 }
 
-const octokit = new Octokit({
-  auth: import.meta.env.VITE_GITHUB_TOKEN,
-});
-
 const Projects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,48 +31,31 @@ const Projects = () => {
     const fetchProjects = async () => {
       try {
         console.log("Fetching projects...");
-        const { data: repos } =
-          await octokit.rest.repos.listForAuthenticatedUser({
-            visibility: "public",
-            sort: "updated",
-            per_page: 100,
-          });
+        const response = await fetch(
+          "https://api.github.com/users/itswyattfr/repos?sort=updated&per_page=100"
+        );
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch repositories");
+        }
 
-        console.log("Fetched repos:", repos); // Check if repos are being fetched.
+        const repos: GitHubRepo[] = await response.json();
+        console.log("Fetched repos:", repos);
 
-        const projectPromises = repos.map(async (repo: GitHubRepo) => {
+        const projectPromises = repos.map(async (repo) => {
           try {
-            console.log(`Fetching data for repo: ${repo.name}`);
             let description = repo.description || "No description available.";
 
-            // Attempt to fetch description.txt
-            try {
-              const { data } = await octokit.rest.repos.getContent({
-                owner: repo.owner.login,
-                repo: repo.name,
-                path: "description.txt",
-              });
-
-              if ("content" in data) {
-                description = Buffer.from(data.content, "base64")
-                  .toString()
-                  .trim();
-              }
-            } catch (descError) {
-              console.warn(
-                `No description.txt for repo ${repo.name}:`,
-                descError
-              );
+            // Fetch last commit using public API
+            const commitResponse = await fetch(
+              `https://api.github.com/repos/${repo.full_name}/commits/${repo.default_branch}`
+            );
+            
+            if (!commitResponse.ok) {
+              throw new Error("Failed to fetch commit data");
             }
 
-            // Fetch last commit
-            const { data: commit } = await octokit.rest.repos.getCommit({
-              owner: repo.owner.login,
-              repo: repo.name,
-              ref: repo.default_branch,
-            });
-
-            console.log(`Commit fetched for repo: ${repo.name}`);
+            const commit = await commitResponse.json();
 
             const tags = [repo.language, ...(repo.topics || [])].filter(
               (tag): tag is string => !!tag
@@ -87,10 +65,10 @@ const Projects = () => {
               title: repo.name,
               description,
               image: `https://opengraph.githubassets.com/1/${repo.full_name}`,
-              github: repo.html_url,
+              github: repo.html_url, 
               demo: repo.homepage || repo.html_url,
               tags,
-              lastCommit: commit.commit.author?.date
+              lastCommit: commit.commit?.author?.date
                 ? new Date(commit.commit.author.date).toLocaleDateString()
                 : "Unknown",
             };
@@ -104,7 +82,6 @@ const Projects = () => {
           (p): p is Project => p !== null
         );
 
-        console.log("Valid projects:", validProjects); // Ensure valid projects exist.
         setProjects(validProjects);
         setLoading(false);
       } catch (err) {
