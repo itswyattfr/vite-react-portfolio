@@ -23,6 +23,6 @@ app.all('*', (req, res, next) => {
 });
 
 // Start the server
-https.createServer(options, app).listen(5000, () => {
-    console.log('Server running on https://localhost:5000');
+https.createServer(options, app).listen(8888, () => {
+    console.log('Server running on https://localhost:8888');
 });
