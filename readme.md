@@ -24,7 +24,7 @@ A modern, responsive portfolio website built with React, TypeScript, and Tailwin
 1. Clone the repository:
 
 ```sh
-git clone [your-repo-url]
+git clone https://github.com/itswyattfr/vite-react-portfolio.git
 ```
 
 2. Install dependencies:
